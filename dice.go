@@ -1,35 +1,48 @@
 package main
 
 import (
-	"fmt"
 	"math/rand"
 	"regexp"
 	"strconv"
 	"time"
 )
 
+var oneDice = regexp.MustCompile(`\s*(\d+)?d(\d+)(?:\s*(\+|\-)?\s*(\d+))?`)
+
 var diceRegex = regexp.MustCompile(`([0-9]*)d(\d+)`)
 var r = rand.New(rand.NewSource(time.Now().UnixNano()))
 
-func Parse(in string) (int, int) {
-	result := diceRegex.FindStringSubmatch(in)
+func Parse(in string) (int, int, string, int) {
+	r := oneDice.FindStringSubmatch(in)
 
-	if len(result) < 3 {
-		return 1, 20
+	count, dice, oper, mod := 1, 20, "", 0
+
+	// match + 4 captures
+	if len(r) != 5 {
+		return count, dice, oper, mod
 	}
 
-	countStr := result[1]
-	maxStr := result[2]
+	cs := r[1]
+	ds := r[2]
+	oper = r[3]
+	ms := r[4]
 
-	count, err := strconv.Atoi(countStr)
+	count, err := strconv.Atoi(cs)
 	if err != nil {
 		count = 1
 	}
-	max, err := strconv.Atoi(maxStr)
+
+	dice, err = strconv.Atoi(ds)
 	if err != nil {
-		count = 20
+		dice = 20
 	}
-	return count, max
+
+	mod, err = strconv.Atoi(ms)
+	if err != nil {
+		mod = 0
+	}
+
+	return count, dice, oper, mod
 }
 
 func Roll(min, max int) int {
@@ -38,7 +51,6 @@ func Roll(min, max int) int {
 }
 
 func RollMany(count, max int) []int {
-	fmt.Printf("RollMany(%v, %v)\n", count, max)
 	results := make([]int, count)
 	for i := 0; i < count; i++ {
 		results[i] = Roll(1, max)

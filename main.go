@@ -27,19 +27,6 @@ func init() {
 var rollLead = "!roll"
 var rollRegex = regexp.MustCompile(`!roll\s+(.*)$`)
 
-func main2() {
-	//a := "!roll"
-	//b := "!roll "
-	//c := "!roll x"
-	//d := "!roll d20"
-
-	//	fmt.Println(strings.HasPrefix(a))
-	//	fmt.Println(strings.HasPrefix(b))
-	//	fmt.Println(strings.HasPrefix(c))
-	//	fmt.Println(strings.HasPrefix(d))
-
-}
-
 func main() {
 
 	// Create a new Discord session using the provided bot token.
@@ -79,27 +66,50 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	fmt.Println(m.Content)
 	if strings.HasPrefix(m.Content, rollLead) {
-		fmt.Println("PREFIX " + m.Content)
-		match := rollRegex.FindStringSubmatch(m.Content)
-		rollStr := ""
-		if len(match) > 1 {
-			rollStr = match[1]
-		}
-		count, max := Parse(rollStr)
-		var buffer bytes.Buffer
-		buffer.WriteString(fmt.Sprintf("Rolling %dd%d (", count, max))
-		o := RollMany(count, max)
-		sum := 0
-		for i, v := range o {
-			if i != 0 {
-				buffer.WriteString(" + ")
-			}
-			buffer.WriteString(fmt.Sprintf("%d", v))
-			sum += v
-		}
-		buffer.WriteString(fmt.Sprintf(") = %d", sum))
-		s.ChannelMessageSend(m.ChannelID, buffer.String())
+		r := doRoll(m.Content)
+		s.ChannelMessageSend(m.ChannelID, r)
 	}
+}
+
+func doRoll(in string) string {
+	match := rollRegex.FindStringSubmatch(in)
+
+	rollStr := ""
+	if len(match) > 1 {
+		rollStr = match[1]
+	}
+
+	count, dice, oper, mod := Parse(rollStr)
+	roll := RollMany(count, dice)
+	sum := 0
+
+	var buffer bytes.Buffer
+	buffer.WriteString(fmt.Sprintf("Rolling %dd%d ", count, dice))
+	switch oper {
+	case "+":
+		sum += mod
+		buffer.WriteString(fmt.Sprintf("+ %d ", mod))
+	case "-":
+		sum -= mod
+		buffer.WriteString(fmt.Sprintf("- %d ", mod))
+	}
+
+	buffer.WriteString("\t:\t[")
+	for i, v := range roll {
+		if i != 0 {
+			buffer.WriteString(" + ")
+		}
+		buffer.WriteString(fmt.Sprintf("%d", v))
+		sum += v
+	}
+	buffer.WriteString("] ")
+	switch oper {
+	case "+":
+		buffer.WriteString(fmt.Sprintf("+ %d ", mod))
+	case "-":
+		buffer.WriteString(fmt.Sprintf("- %d ", mod))
+	}
+	buffer.WriteString(fmt.Sprintf("= %d", sum))
+	return buffer.String()
 }
