@@ -80,36 +80,46 @@ func doRoll(in string) string {
 		rollStr = match[1]
 	}
 
-	count, dice, oper, mod := Parse(rollStr)
-	roll := RollMany(count, dice)
-	sum := 0
-
+	// TODO this is dirty, need to clean it up A LOT
+	rolls := ParseMany(rollStr)
 	var buffer bytes.Buffer
-	buffer.WriteString(fmt.Sprintf("Rolling %dd%d ", count, dice))
-	switch oper {
-	case "+":
-		sum += mod
-		buffer.WriteString(fmt.Sprintf("+ %d ", mod))
-	case "-":
-		sum -= mod
-		buffer.WriteString(fmt.Sprintf("- %d ", mod))
-	}
-
-	buffer.WriteString("\t:\t[")
-	for i, v := range roll {
-		if i != 0 {
-			buffer.WriteString(" + ")
+	for i, dr := range rolls {
+		if i > 1 {
+			continue // TODO this is broken because of our parsing
 		}
-		buffer.WriteString(fmt.Sprintf("%d", v))
-		sum += v
+		if i > 0 {
+			buffer.WriteString("\n")
+		}
+
+		roll := RollMany(dr.count, dr.dice)
+		sum := 0
+
+		buffer.WriteString(fmt.Sprintf("Rolling %dd%d ", dr.count, dr.dice))
+		switch dr.oper {
+		case "+":
+			sum += dr.mod
+			buffer.WriteString(fmt.Sprintf("+ %d ", dr.mod))
+		case "-":
+			sum -= dr.mod
+			buffer.WriteString(fmt.Sprintf("- %d ", dr.mod))
+		}
+
+		buffer.WriteString("\t:\t[")
+		for i, v := range roll {
+			if i != 0 {
+				buffer.WriteString(" + ")
+			}
+			buffer.WriteString(fmt.Sprintf("%d", v))
+			sum += v
+		}
+		buffer.WriteString("] ")
+		switch dr.oper {
+		case "+":
+			buffer.WriteString(fmt.Sprintf("+ %d ", dr.mod))
+		case "-":
+			buffer.WriteString(fmt.Sprintf("- %d ", dr.mod))
+		}
+		buffer.WriteString(fmt.Sprintf("= %d", sum))
 	}
-	buffer.WriteString("] ")
-	switch oper {
-	case "+":
-		buffer.WriteString(fmt.Sprintf("+ %d ", mod))
-	case "-":
-		buffer.WriteString(fmt.Sprintf("- %d ", mod))
-	}
-	buffer.WriteString(fmt.Sprintf("= %d", sum))
 	return buffer.String()
 }

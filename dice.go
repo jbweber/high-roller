@@ -7,19 +7,25 @@ import (
 	"time"
 )
 
+var manyDice = regexp.MustCompile(`(\s*\d*?d\d+(?:\s*(?:\+|\-)?\s*\d+)?)`)
 var oneDice = regexp.MustCompile(`\s*(\d+)?d(\d+)(?:\s*(\+|\-)?\s*(\d+))?`)
-
-var diceRegex = regexp.MustCompile(`([0-9]*)d(\d+)`)
 var r = rand.New(rand.NewSource(time.Now().UnixNano()))
 
-func Parse(in string) (int, int, string, int) {
+type diceRoll struct {
+	count int
+	dice  int
+	oper  string
+	mod   int
+}
+
+func Parse(in string) diceRoll {
 	r := oneDice.FindStringSubmatch(in)
 
 	count, dice, oper, mod := 1, 20, "", 0
 
 	// match + 4 captures
 	if len(r) != 5 {
-		return count, dice, oper, mod
+		return diceRoll{count, dice, oper, mod}
 	}
 
 	cs := r[1]
@@ -42,7 +48,30 @@ func Parse(in string) (int, int, string, int) {
 		mod = 0
 	}
 
-	return count, dice, oper, mod
+	return diceRoll{count, dice, oper, mod}
+}
+
+func ParseMany(in string) []diceRoll {
+	// parse
+	parsed := manyDice.FindAllStringSubmatch(in, -1)
+
+	if len(parsed) == 0 {
+		return []diceRoll{diceRoll{1, 20, "", 0}}
+	}
+
+	result := make([]diceRoll, len(parsed))
+	for i, p := range parsed {
+		if i > 1 {
+			continue
+		}
+		if len(p) != 2 {
+			result[i] = diceRoll{1, 20, "", 0}
+		}
+		roll := Parse(p[1])
+		result[i] = roll
+	}
+
+	return result
 }
 
 func Roll(min, max int) int {
