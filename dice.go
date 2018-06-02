@@ -7,8 +7,8 @@ import (
 	"time"
 )
 
-var manyDice = regexp.MustCompile(`(\s*\d*?d\d+(?:\s*(?:\+|\-)?\s*\d+)?)`)
-var oneDice = regexp.MustCompile(`\s*(\d+)?d(\d+)(?:\s*(\+|\-)?\s*(\d+))?`)
+var manyDice = regexp.MustCompile(`(\s*\d*?d\d+(?:\s*(?:\+|\-)\s*\d+)?)`)
+var oneDice = regexp.MustCompile(`\s*(\d+)?d(\d+)(?:\s*(\+|\-)\s*(\d+))?`)
 var r = rand.New(rand.NewSource(time.Now().UnixNano()))
 
 type diceRoll struct {
@@ -61,9 +61,6 @@ func ParseMany(in string) []diceRoll {
 
 	result := make([]diceRoll, len(parsed))
 	for i, p := range parsed {
-		if i > 1 {
-			continue
-		}
 		if len(p) != 2 {
 			result[i] = diceRoll{1, 20, "", 0}
 		}

@@ -113,10 +113,8 @@ func doRoll(in string) string {
 	// TODO this is dirty, need to clean it up A LOT
 	rolls := ParseMany(rollStr)
 	var buffer bytes.Buffer
+	totals := make([]int, len(rolls))
 	for i, dr := range rolls {
-		if i > 1 {
-			continue // TODO this is broken because of our parsing
-		}
 		if i > 0 {
 			buffer.WriteString("\n")
 		}
@@ -150,6 +148,24 @@ func doRoll(in string) string {
 			buffer.WriteString(fmt.Sprintf("- %d ", dr.mod))
 		}
 		buffer.WriteString(fmt.Sprintf("= %d", sum))
+		totals[i] = sum
 	}
+
+	if len(rolls) > 1 {
+		total := 0
+		buffer.WriteString("\n")
+		buffer.WriteString("Total Sum ")
+		for i, v := range totals {
+			if i != 0 {
+				buffer.WriteString(" + ")
+			}
+
+			buffer.WriteString(fmt.Sprintf("%d", v))
+			total += v
+		}
+
+		buffer.WriteString(fmt.Sprintf(" = %d", total))
+	}
+
 	return buffer.String()
 }

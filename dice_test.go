@@ -105,7 +105,8 @@ func TestParseMany(t *testing.T) {
 		{"   1d8 - 1	", []diceRoll{diceRoll{1, 8, "-", 1}}},
 		{"1d8+1 3d6", []diceRoll{diceRoll{1, 8, "+", 1}, diceRoll{3, 6, "", 0}}},
 		{"   1d8 + 1    3d6			", []diceRoll{diceRoll{1, 8, "+", 1}, diceRoll{3, 6, "", 0}}},
-		{"   1d8 + 1    3d6			", []diceRoll{diceRoll{1, 8, "+", 1}, diceRoll{3, 6, "", 0}}},
+		{"   1d8 + 1    3d6	 1d8+4		", []diceRoll{diceRoll{1, 8, "+", 1}, diceRoll{3, 6, "", 0}, diceRoll{1, 8, "+", 4}}},
+		{" 1d12  1d8 + 1    3d6	 1d8+4		", []diceRoll{diceRoll{1, 12, "", 0}, diceRoll{1, 8, "+", 1}, diceRoll{3, 6, "", 0}, diceRoll{1, 8, "+", 4}}},
 	}
 
 	for _, tc := range tt {
